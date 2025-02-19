@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eprq_dba"
+version = "1.5.0"
+authors = [
+    { name = "Mayank Bhatia" }
+]
+description = "An implementation of https://arxiv.org/pdf/2306.10825 using aqnsim."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["eprq_dba*"]
