@@ -4,16 +4,16 @@ import aqnsim
 # User-defined Parameters
 # ---------------------------
 COMMANDER_NAME = "Alice"
-LIEUTENANT_NAMES = ["Bob", "Charlie", "David", "Eve"]
+LIEUTENANT_NAMES = ["Bob", "Charlie", "David", "Eve", "Francis"]
 DISTRIBUTOR_NAME = "Distributor"
 
 # Number of tuples (or entangled pairs) per lieutenant
-M = 500
+M = 250
 
 # Traitor configuration
-COMMANDER_IS_TRAITOR = False
+COMMANDER_IS_TRAITOR = True
 # Indices of lieutenants who are traitors: must be a subset of valid indices (0 to len(LIEUTENANT_NAMES)-1)
-TRAITOR_INDICES = []  # TODO: IMPLEMENT TRAITOR LOGIC
+TRAITOR_INDICES = [0,1] 
 
 # Order that a loyal commander sends (if not traitor)
 LOYAL_COMMANDER_ORDER = False

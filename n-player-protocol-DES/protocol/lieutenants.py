@@ -198,6 +198,11 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                 else:
                     self.node.memory.initial_decision = None
 
+                if self.node.memory.is_traitor:
+                    tuple_length = N - 1
+                    self.node.memory.initial_decision = aqnsim.random_utilities.choice([True, False, None])
+                    self.node.memory.command_vector = [aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * M)]
+
                 # SHARE COMMAND VECTOR WITH OTHERS 
                 first_evidence_bundle = EvidenceBundle(
                     initial=InitialEvidence(
@@ -206,6 +211,7 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                     ),
                     # No intermediary evidence is sent yet
                     intermediary=IntermediaryEvidence())
+
                 self.node.memory.proofs[self.node.memory.lieutenant_index] = first_evidence_bundle  # Save your own initial evidence
                 for idx, lieutenant_name in enumerate(LIEUTENANT_NAMES):
                     if idx == self.node.memory.lieutenant_index:
@@ -282,6 +288,14 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                             collected_proofs.extend(contradicting_proofs)  # Send 2 contradicting CVs as proof
                         
                     # SEND INTERMEDIARY EVIDENCE FOR LIEUTENANT TO UPDATE THEIR EVIDENCE BUNDLE
+
+            
+                    if self.node.memory.is_traitor:
+                        tuple_length = N - 1
+                        num_proofs = aqnsim.random_utilities.choice([0,1,2])
+                        self.node.memory.intermediate_decision = aqnsim.random_utilities.choice([True, False, None])
+                        collected_proofs = [[aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * M)] for __ in range(num_proofs)]
+
 
                     intermediary_evidence = IntermediaryEvidence(
                         decision=self.node.memory.intermediate_decision,
@@ -365,6 +379,10 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                             else:
                                 self.node.memory.final_decision = d_i
                             continue
+
+                    if self.node.memory.is_traitor:
+                        self.node.memory.final_decision = aqnsim.random_utilities.choice([True, False, None])
+
                     self.node.data_collector.update_attribute(self.name, {"is_traitor":self.node.memory.is_traitor,
                                                                           "received_order": self.node.memory.received_order,
                                                                           "initial_decision": self.node.memory.initial_decision,

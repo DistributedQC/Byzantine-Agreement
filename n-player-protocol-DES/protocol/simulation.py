@@ -29,7 +29,7 @@ def print_game_stats(results):
 
 def create_commander(sim_context: aqnsim.SimulationContext):
     if COMMANDER_IS_TRAITOR:
-        orders = [random.choice([True, False]) for _ in LIEUTENANT_NAMES]
+        orders = [aqnsim.random_utilities.choice([True, False]) for _ in LIEUTENANT_NAMES]
     else:
         orders = [LOYAL_COMMANDER_ORDER] * len(LIEUTENANT_NAMES)
     
