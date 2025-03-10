@@ -1,3 +1,5 @@
+import aqnsim
+
 # ---------------------------
 # User-defined Parameters
 # ---------------------------
@@ -5,7 +7,7 @@ COMMANDER_NAME = "Alice"
 LIEUTENANT_NAMES = ["Bob", "Charlie", "David"]
 
 # Number of tuples (or entangled pairs) per lieutenant
-M = 4
+M = 50
 
 # Traitor configuration
 COMMANDER_IS_TRAITOR = False
@@ -31,4 +33,19 @@ assert set(TRAITOR_INDICES).issubset(valid_indices), (
 NUM_PLAYERS = N
 NUM_ROUNDS = M
 NUM_LIEUTENANTS = N - 1
-ALICE_QMEMORY_ADDR = N - 1  # Derived parameter; do not change
+COMMANDER_QMEMORY_ADDR = N - 1  # Derived parameter; do not change
+
+
+SEND_ORDER_ACTION = "SEND_ORDER"
+SEND_CV_ACTION = "SEND_CV"
+ROUND2_ACTION = "ROUND2_ACTION"
+ROUND3_ACTION = "ROUND3_ACTION"
+
+DISTRIBUTOR_NAME = "Distributor"
+
+
+SEC = aqnsim.SECOND
+QSOURCE_NOISE_MODEL = None
+QUANTUM_CHANNEL_DELAY = 1 * SEC
+QUANTUM_CHANNEL_NOISE = 0.0
+CLASSICAL_CHANNEL_DELAY = 1 * SEC
