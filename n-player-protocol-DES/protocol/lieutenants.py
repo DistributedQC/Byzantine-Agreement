@@ -194,14 +194,14 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                 self.node.memory.command_vector = msg.content
                 self.simlogger.info(f"{self.node.name} stored CV {self.node.memory.command_vector}")
                 if self.node.check_alice(tolerance = M//10):
-                    self.node.initial_decision = self.node.memory.received_order
+                    self.node.memory.initial_decision = self.node.memory.received_order
                 else:
-                    self.node.initial_decision = None
+                    self.node.memory.initial_decision = None
 
                 # SHARE COMMAND VECTOR WITH OTHERS 
                 first_evidence_bundle = EvidenceBundle(
                     initial=InitialEvidence(
-                        decision=self.node.initial_decision,
+                        decision=self.node.memory.initial_decision,
                         command_vector=self.node.memory.command_vector
                     ),
                     # No intermediary evidence is sent yet
