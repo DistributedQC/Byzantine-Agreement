@@ -56,5 +56,5 @@ def run_sweep2(sweep_param, sweep_vals, exp_name, num_shots):
 if __name__ == "__main__":
     start_time = time.time()
     params = [[SimulationConfig(M=i, COMMANDER_IS_TRAITOR=False, LOYAL_COMMANDER_ORDER=(True if random.random() < 0.5 else False))] for i in [4, 8, 16, 32, 64, 128, 192, 256, 384, 512]] # , 32, 64, 128, 192, 256, 384, 512
-    run_sweep2("M", params, f"M_sweep_real", num_shots=100)
+    run_sweep2("M", params, f"M_sweep_real_1", num_shots=50)
     print(time.time() - start_time)

@@ -1,6 +1,8 @@
 import sqlite3
 import datetime
+import numpy as np
 from protocol.config import SimulationConfig
+import matplotlib.pyplot as plt
 
 # ---------------------------
 # Database Setup
@@ -69,6 +71,55 @@ def fetch_sweep_shots(experiment_name, db_path="simulation_results.db"):
     conn.close()
     return rows
 
+def return_metric(commands_sent, final_votes, traitors):
+    # [success, traitor_success, abort]
+    bad = False
+    for i in range(len(commands_sent)):
+        if (traitors[i] != "1" and commands_sent[i] != final_votes[i]):
+            if (final_votes[i] != "N"):
+                return np.array([0, 1, 0])
+            else:
+                bad = True
+    if (bad):
+        return np.array([0, 0, 1])
+    return np.array([1, 0, 0]) 
+
+def plot_experiment(shots):
+    data = {}
+    for shot in shots:
+        param_val = float(shot[5])
+        traitors = shot[10].split()
+        final_votes = shot[9].split()
+        commands_sent = shot[6].split()
+        metric = return_metric(commands_sent, final_votes, traitors)
+        if param_val in data:
+            data[param_val] += metric
+        else:
+            data[param_val] = metric
+    
+    param_vals = []
+    success_vals = []
+    traitor_success_vals = []
+    abort_vals = []
+    for k, v in data.items():
+        param_vals.append(k)
+        success_vals.append(v[0] / np.sum(v))
+        traitor_success_vals.append(v[1] / np.sum(v))
+        abort_vals.append(v[2] / np.sum(v))
+        
+    # print(data[512.0])
+        
+    plt.plot(param_vals, success_vals, label="Success")
+    plt.plot(param_vals, traitor_success_vals, label="Traitor Success")
+    plt.plot(param_vals, abort_vals, label="Abort")
+    
+    plt.xlabel("M")
+    plt.ylabel("%")
+    plt.title("Effect of M on Metrics")
+    
+    plt.legend()
+    plt.show()
+    
 
 # ---------------------------
 # Example: Run the Sweep
@@ -76,6 +127,8 @@ def fetch_sweep_shots(experiment_name, db_path="simulation_results.db"):
 if __name__ == "__main__":
     # create_results_table()
 
-    shots = fetch_sweep_shots("exp_M_sweep4")
-    for shot in shots:
-        print(shot)
+    shots = fetch_sweep_shots("M_sweep_real_1")
+    # for shot in shots:
+    #     print(shot)
+
+    plot_experiment(shots)
