@@ -17,4 +17,4 @@ test = ["pytest"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["protocol*"]
+include = ["protocol*", "results*"]

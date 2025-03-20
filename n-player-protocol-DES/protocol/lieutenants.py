@@ -1,13 +1,14 @@
 import aqnsim
 from dataclasses import dataclass, field
 from protocol.players import Player
-from protocol.config import (
-    COMMANDER_NAME, COMMANDER_IS_TRAITOR, LOYAL_COMMANDER_ORDER, COMMANDER_QMEMORY_ADDR,
-    LIEUTENANT_NAMES, TRAITOR_INDICES,
-    DISTRIBUTOR_NAME,
-    NUM_PLAYERS, NUM_LIEUTENANTS, M, N,
-    SEND_ORDER_ACTION, SEND_CV_ACTION, ROUND2_ACTION, ROUND3_ACTION
-)
+from protocol.config import SimulationConfig
+# from protocol.config import (
+#     COMMANDER_NAME, COMMANDER_IS_TRAITOR, LOYAL_COMMANDER_ORDER, COMMANDER_QMEMORY_ADDR,
+#     LIEUTENANT_NAMES, TRAITOR_INDICES,
+#     DISTRIBUTOR_NAME,
+#     NUM_PLAYERS, NUM_LIEUTENANTS, M, N,
+#     SEND_ORDER_ACTION, SEND_CV_ACTION, ROUND2_ACTION, ROUND3_ACTION
+# )
 
 """
 DEFINE DATACLASSES FOR EVIDENCE
@@ -48,8 +49,8 @@ class LieutenantCMemory:
 
 
 class Lieutenant(Player):
-    def __init__(self, sim_context: aqnsim.SimulationContext, name: str, lieutenant_index: int, is_traitor: bool):
-        super().__init__(sim_context=sim_context, name=name)
+    def __init__(self, sim_context: aqnsim.SimulationContext, name: str, lieutenant_index: int, is_traitor: bool, sim_config=SimulationConfig):
+        super().__init__(sim_context=sim_context, name=name, sim_config=sim_config)
 
         # Quantum Memory is initialized by the parent Player class
 
@@ -60,22 +61,22 @@ class Lieutenant(Player):
     def approx_equal_int(actual: int, expected: int, tolerance: int = 0) -> bool:
         return abs(actual - expected) <= tolerance
 
-    @staticmethod
-    def T_i_x(v: list[bool | None], i: int, x: bool) -> set[int]:
+    # @staticmethod
+    def T_i_x(self, v: list[bool | None], i: int, x: bool) -> set[int]:
         """
         Returns the set of tuple indices k (0 <= k < m) for which the i-th element
         (0 <= i < n-1) of the k-th tuple in v equals x.
         """
         result = set()
-        tuple_length = N - 1
-        for k in range(M):
+        tuple_length = self.sim_config.N - 1
+        for k in range(self.sim_config.M):
             pos = tuple_length * k + i
             if v[pos] is not None and v[pos] == x:
                 result.add(k)
         return result
 
-    @staticmethod
-    def T_i_x_j_y(v: list[bool | None], i: int, j: int, x: bool, y: bool) -> set[int]:
+    # @staticmethod
+    def T_i_x_j_y(self, v: list[bool | None], i: int, j: int, x: bool, y: bool) -> set[int]:
         """
         Returns the set of tuple indices k (0 <= k < m) for which:
           - The i-th element of the k-th tuple equals x, and
@@ -83,8 +84,8 @@ class Lieutenant(Player):
         Here, 0 <= i, j < n-1 and i != j.
         """
         result = set()
-        tuple_length = N - 1
-        for k in range(M):
+        tuple_length = self.sim_config.N - 1
+        for k in range(self.sim_config.M):
             pos_i = tuple_length * k + i
             pos_j = tuple_length * k + j
             if (v[pos_i] is not None and v[pos_j] is not None and
@@ -102,12 +103,12 @@ class Lieutenant(Player):
             raise ValueError(f"No order specified for lieutenant {self.memory.lieutenant_index}")
 
         T = self.T_i_x(v = self.memory.command_vector, i = self.memory.lieutenant_index, x = self.memory.received_order)
-        if not self.approx_equal_int(len(T), M // 2, tolerance):
+        if not self.approx_equal_int(len(T), self.sim_config.M // 2, tolerance):
             return False
 
         # The protocol expects anti-correlation in every tuple
-        tuple_length = N - 1
-        for k in range(M):
+        tuple_length = self.sim_config.N - 1
+        for k in range(self.sim_config.M):
             pos = tuple_length * k + self.memory.lieutenant_index
             if self.memory.command_vector[pos] == self.memory.bit_vector[pos]:
                 return False
@@ -124,11 +125,11 @@ class Lieutenant(Player):
             raise ValueError(f"Command vector must be concrete not {j_command_vector}")
             
         T1 = self.T_i_x_j_y(v = j_command_vector, i = self.memory.lieutenant_index, j = j, x = c, y = c)
-        if not self.approx_equal_int(len(T1), M // 4, tolerance):
+        if not self.approx_equal_int(len(T1), self.sim_config.M // 4, tolerance):
             return False
 
         T2 = self.T_i_x_j_y(v = j_command_vector, i = self.memory.lieutenant_index, j = j, x = (not c), y = c)
-        if not self.approx_equal_int(len(T2), M // 4, tolerance):
+        if not self.approx_equal_int(len(T2), self.sim_config.M // 4, tolerance):
             return False
 
         T3 = self.T_i_x_j_y(v = self.memory.command_vector, i = self.memory.lieutenant_index, j = j, x = (not c), y = c)
@@ -142,15 +143,15 @@ class Lieutenant(Player):
         Check another lieutenant's command vector against this lieutenant's bit vector.
         """
         T1 = self.T_i_x_j_y(v = j_command_vector, i = self.memory.lieutenant_index, j = j, x = c, y = c)
-        if not self.approx_equal_int(len(T1), M // 4, tolerance):
+        if not self.approx_equal_int(len(T1), self.sim_config.M // 4, tolerance):
             return False
 
         T2 = self.T_i_x_j_y(v = j_command_vector, i = self.memory.lieutenant_index, j = j, x = (not c), y = c)
-        if not self.approx_equal_int(len(T2), M // 4, tolerance):
+        if not self.approx_equal_int(len(T2), self.sim_config.M // 4, tolerance):
             return False
 
-        tuple_length = N - 1
-        for k in range(M):
+        tuple_length = self.sim_config.N - 1
+        for k in range(self.sim_config.M):
             pos = tuple_length * k + self.memory.lieutenant_index
             if j_command_vector[pos] == self.memory.bit_vector[pos]:
                 return False
@@ -161,13 +162,13 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
     def __init__(self, sim_context: aqnsim.SimulationContext, node: Lieutenant):
         super().__init__(sim_context=sim_context, node=node, name=node.name)
 
-        self.node.ports[DISTRIBUTOR_NAME].add_rx_input_handler(
+        self.node.ports[self.node.sim_config.DISTRIBUTOR_NAME].add_rx_input_handler(
             handler=lambda msg: self.quantum_port_source_handler(msg=msg)
         )
 
-        self.node.ports[COMMANDER_NAME].add_rx_input_handler(self.classical_port_commander_handler)
+        self.node.ports[self.node.sim_config.COMMANDER_NAME].add_rx_input_handler(self.classical_port_commander_handler)
 
-        for idx, lieutenant_name in enumerate(LIEUTENANT_NAMES):
+        for idx, lieutenant_name in enumerate(self.node.sim_config.LIEUTENANT_NAMES):
             if idx == self.node.memory.lieutenant_index:
                 continue
             self.node.ports[lieutenant_name].add_rx_input_handler(self.classical_port_lieutenant_handler)
@@ -186,22 +187,22 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
         # Round 1/2: 
 
         if isinstance(msg, aqnsim.CMessage):
-            if msg.action == SEND_ORDER_ACTION:
+            if msg.action == self.node.sim_config.SEND_ORDER_ACTION:
                 self.node.memory.received_order = msg.content
                 # self.simlogger.info(f"{self.node.name} stored order {self.node.memory.received_order}")
                 yield self.wait(0)
-            elif msg.action == SEND_CV_ACTION:
+            elif msg.action == self.node.sim_config.SEND_CV_ACTION:
                 self.node.memory.command_vector = msg.content
                 self.simlogger.info(f"{self.node.name} stored CV {self.node.memory.command_vector}")
-                if self.node.check_alice(tolerance = M//10):
+                if self.node.check_alice(tolerance = self.node.sim_config.M // 10):
                     self.node.memory.initial_decision = self.node.memory.received_order
                 else:
                     self.node.memory.initial_decision = None
 
                 if self.node.memory.is_traitor:
-                    tuple_length = N - 1
+                    tuple_length = self.node.sim_config.N - 1
                     self.node.memory.initial_decision = aqnsim.random_utilities.choice([True, False, None])
-                    self.node.memory.command_vector = [aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * M)]
+                    self.node.memory.command_vector = [aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * self.node.sim_config.M)]
 
                 # SHARE COMMAND VECTOR WITH OTHERS 
                 first_evidence_bundle = EvidenceBundle(
@@ -213,11 +214,11 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                     intermediary=IntermediaryEvidence())
 
                 self.node.memory.proofs[self.node.memory.lieutenant_index] = first_evidence_bundle  # Save your own initial evidence
-                for idx, lieutenant_name in enumerate(LIEUTENANT_NAMES):
+                for idx, lieutenant_name in enumerate(self.node.sim_config.LIEUTENANT_NAMES):
                     if idx == self.node.memory.lieutenant_index:
                         continue
                     cv_message = aqnsim.CMessage(
-                        sender=self.node.memory.lieutenant_index, action=ROUND2_ACTION, content=first_evidence_bundle
+                        sender=self.node.memory.lieutenant_index, action=self.node.sim_config.ROUND2_ACTION, content=first_evidence_bundle
                     )
                     self.node.ports[lieutenant_name].rx_output(cv_message)
              
@@ -227,9 +228,9 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
     def classical_port_lieutenant_handler(self, msg: aqnsim.CMessage):
         
         if isinstance(msg, aqnsim.CMessage):
-            if msg.action == ROUND2_ACTION:
+            if msg.action == self.node.sim_config.ROUND2_ACTION:
                 self.node.memory.proofs[msg.sender] = msg.content
-                if len(self.node.memory.proofs) == NUM_LIEUTENANTS:
+                if len(self.node.memory.proofs) == self.node.sim_config.NUM_LIEUTENANTS:
                     self.simlogger.info(f"{self.node.name} received inital evidence bundles from all lieutenants")
                     # Rule 3.1
                     d_i = self.node.memory.initial_decision
@@ -255,7 +256,7 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                                         sender_idx,
                                         bundle.initial.decision,
                                         bundle.initial.command_vector,
-                                        tolerance = M//10
+                                        tolerance = self.node.sim_config.M//10
                                     ):
                                         conflict_found = True
                                         collected_proofs.append(bundle.initial.command_vector)
@@ -273,7 +274,7 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                                     sender_idx,
                                     bundle.initial.decision,
                                     bundle.initial.command_vector,
-                                    tolerance = M//10
+                                    tolerance = self.node.sim_config.M // 10
                                 ):
                                     valid_decisions.append(bundle.initial.decision)
                                     valid_proofs.append(bundle.initial.command_vector)
@@ -291,10 +292,10 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
 
             
                     if self.node.memory.is_traitor:
-                        tuple_length = N - 1
+                        tuple_length = self.node.sim_config.N - 1
                         num_proofs = aqnsim.random_utilities.choice([0,1,2])
                         self.node.memory.intermediate_decision = aqnsim.random_utilities.choice([True, False, None])
-                        collected_proofs = [[aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * M)] for __ in range(num_proofs)]
+                        collected_proofs = [[aqnsim.random_utilities.choice([True, False, None]) for _ in range(tuple_length * self.node.sim_config.M)] for __ in range(num_proofs)]
 
 
                     intermediary_evidence = IntermediaryEvidence(
@@ -302,17 +303,17 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                         command_vectors = collected_proofs
                     )
                     self.node.memory.intermediary_proofs[self.node.memory.lieutenant_index] = intermediary_evidence 
-                    for idx, lieutenant_name in enumerate(LIEUTENANT_NAMES):
+                    for idx, lieutenant_name in enumerate(self.node.sim_config.LIEUTENANT_NAMES):
                         if idx == self.node.memory.lieutenant_index:
                             continue
                         cv_message = aqnsim.CMessage(
-                            sender=self.node.memory.lieutenant_index, action=ROUND3_ACTION, content=intermediary_evidence
+                            sender=self.node.memory.lieutenant_index, action=self.node.sim_config.ROUND3_ACTION, content=intermediary_evidence
                         )
                         self.node.ports[lieutenant_name].rx_output(cv_message)
              
-            if msg.action == ROUND3_ACTION:
+            if msg.action == self.node.sim_config.ROUND3_ACTION:
                 self.node.memory.intermediary_proofs[msg.sender] = msg.content
-                if len(self.node.memory.intermediary_proofs) == NUM_LIEUTENANTS:
+                if len(self.node.memory.intermediary_proofs) == self.node.sim_config.NUM_LIEUTENANTS:
                     self.simlogger.info(f"{self.node.name} received intermediary evidence bundles from all lieutenants")
 
                     ## UPDATE PROOFS WITH INTERMEDIARY_PROOFS ##
@@ -349,7 +350,7 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                                                 sender_idx,
                                                 bundle.initial.decision,
                                                 bundle.intermediary.command_vectors[0],
-                                                tolerance=M//10
+                                                tolerance=self.node.sim_config.M // 10
                                             )):
                                             conflict_found = True
                                             break
@@ -368,7 +369,7 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                                             sender_idx,
                                             bundle.intermediary.decision,
                                             bundle.intermediary.command_vectors[0],
-                                            tolerance=M//10
+                                            tolerance=self.node.sim_config.M // 10
                                         )):
                                             conflict_found = True
                                             break
