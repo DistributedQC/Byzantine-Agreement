@@ -53,7 +53,6 @@ class Distributor(aqnsim.Node):
             ports= [COMMANDER_NAME] + [name for name in LIEUTENANT_NAMES],
             name=name
         )
-        self.data_collector.register_attribute(self.name)
 
         # Create an optical switch to dynamically route qubits and connect the output ports.
         self.optical_switch = aqnsim.OpticalSwitch(
@@ -122,11 +121,10 @@ class DistributorProtocol(aqnsim.NodeProtocol):
         current_round = 0
         while (current_round < NUM_ROUNDS):
             base_forwarding_list=list(range(NUM_PLAYERS))
-            self.distributor.emit_qubits(n_port_forwarding_list=base_forwarding_list)
             for k in range(1, NUM_PLAYERS): 
-                yield self.wait(1)  
                 forwarding_list = base_forwarding_list[::k] + [x for x in base_forwarding_list if x not in base_forwarding_list[::k]]
                 self.distributor.emit_qubits(n_port_forwarding_list=forwarding_list)
+                yield self.wait(1)  
             current_round += 1
             self.sim_context.simlogger.info(f"Finished round {current_round}")
 
@@ -232,6 +230,49 @@ def setup_network(sim_context: aqnsim.SimulationContext) -> aqnsim.Network:
         
     return network
 
+def loss_handling(simulation_results):
+    """
+    For each timestamp, if at least one player experienced photon loss, the corresponding bit is removed
+    from the bit vectors of all players who did not experience photon loss at that timestamp.
+    """
+    # Step 1: Round timestamps for each player
+    rounded_data = {
+        player: [(bit_vector, round(ts)) for bit_vector, ts in updates]
+        for player, updates in simulation_results.items()
+    }
+    #print(rounded_data)
+
+    # Step 2: Collect all possible timestamps
+    all_timestamps = list(range(0,(NUM_PLAYERS-1)*NUM_ROUNDS))
+    #print(all_timestamps)
+
+    # Step 3: Collect all collected timestamps from players
+    player_timestamps = {player: {ts for _, ts in updates} for player, updates in rounded_data.items()}
+    #print(player_timestamps)
+
+    # Step 4: Identify timestamps that must be removed
+    missing_timestamps = [ts for ts in all_timestamps if not all(ts in player_timestamps[player] for player in rounded_data)]
+    #print(missing_timestamps)
+
+    # Step 5: For each missing timestamp, remove the bit with that index from players who have that timestamp
+    for ts in missing_timestamps:
+        for player, updates in rounded_data.items():
+            # Track how many bits have been removed so far for each player
+            bits_removed = 0
+            updated_player_data = []
+            
+            for idx, (bit_vector, timestamp) in enumerate(updates):
+                if timestamp == ts:
+                    # Remove the bit at the correct index adjusted for previously removed bits
+                    bit_vector.pop(idx - bits_removed) 
+                    bits_removed += 1
+                else:
+                    updated_player_data.append((bit_vector, timestamp))
+            
+            # Update the player's data (after removing the bit corresponding to the missing timestamp)
+            rounded_data[player] = updated_player_data
+    print(rounded_data)
+
 # Run the simulation(s).
 if __name__ == "__main__":
 
@@ -245,4 +286,4 @@ if __name__ == "__main__":
 
     results = run_simulation()
 
-    print (results)
+    loss_handling(results)
