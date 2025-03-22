@@ -240,19 +240,15 @@ def loss_handling(simulation_results):
         player: [(bit_vector, round(ts)) for bit_vector, ts in updates]
         for player, updates in simulation_results.items()
     }
-    #print(rounded_data)
 
     # Step 2: Collect all possible timestamps
     all_timestamps = list(range(0,(NUM_PLAYERS-1)*NUM_ROUNDS))
-    #print(all_timestamps)
 
     # Step 3: Collect all collected timestamps from players
     player_timestamps = {player: {ts for _, ts in updates} for player, updates in rounded_data.items()}
-    #print(player_timestamps)
 
     # Step 4: Identify timestamps that must be removed
     missing_timestamps = [ts for ts in all_timestamps if not all(ts in player_timestamps[player] for player in rounded_data)]
-    #print(missing_timestamps)
 
     # Step 5: For each missing timestamp, remove the bit with that index from players who have that timestamp
     for ts in missing_timestamps:
@@ -271,7 +267,7 @@ def loss_handling(simulation_results):
             
             # Update the player's data (after removing the bit corresponding to the missing timestamp)
             rounded_data[player] = updated_player_data
-    print(rounded_data)
+    return rounded_data
 
 # Run the simulation(s).
 if __name__ == "__main__":
