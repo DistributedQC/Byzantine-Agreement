@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # ---------------------------
 # Database Setup
 # ---------------------------
-def create_results_table(db_path="simulation_results.db"):
+def create_results_table(db_path="noisy_simulation_results.db"):
     """Creates the SQLite database table if it does not already exist."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -28,7 +28,9 @@ def create_results_table(db_path="simulation_results.db"):
             M INTEGER,
             N INTEGER,
             num_traitors INTEGER,
-            commander_is_traitor BOOLEAN
+            commander_is_traitor BOOLEAN,
+            noise_type TEXT,
+            noise_vals TEXT
         )
     ''')
 
@@ -44,14 +46,22 @@ def store_sweep_result(experiment_name, swept_parameter, swept_value, shot_id, c
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    # This is for the w/o noise database
+    # cursor.execute('''
+    #     INSERT INTO experiment_results (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, traitor_indices, M, N, num_traitors, commander_is_traitor)
+    #     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    # ''', (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, " ".join(traitor_inds), config.M, config.N, len(config.TRAITOR_INDICES), config.COMMANDER_IS_TRAITOR))
+
+    # This is for the w/ noise database
     cursor.execute('''
-        INSERT INTO experiment_results (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, traitor_indices, M, N, num_traitors, commander_is_traitor)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, " ".join(traitor_inds), config.M, config.N, len(config.TRAITOR_INDICES), config.COMMANDER_IS_TRAITOR))
+        INSERT INTO experiment_results (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, traitor_indices, M, N, num_traitors, commander_is_traitor, noise_type, noise_vals)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (experiment_name, swept_parameter, swept_value, shot_id, commands_sent, initial_result, intermediate_result, final_result, " ".join(traitor_inds), config.M, config.N, len(config.TRAITOR_INDICES), config.COMMANDER_IS_TRAITOR, config.NOISE_TYPE.value, " ".join([str(i) for i in config.NOISE_VALS])))
+
 
     conn.commit()
     conn.close()
-
+    
 # ---------------------------
 # Query Data
 # ---------------------------
@@ -118,7 +128,7 @@ def plot_experiment(shots):
     plt.title("Effect of M on Metrics")
     
     plt.legend()
-    plt.show()
+    
     
 
 # ---------------------------
@@ -127,8 +137,11 @@ def plot_experiment(shots):
 if __name__ == "__main__":
     # create_results_table()
 
-    shots = fetch_sweep_shots("M_sweep_real_1")
-    # for shot in shots:
-    #     print(shot)
+    shots = fetch_sweep_shots("Traitors_Sweep_1_M_16")
+    # for m in [16, 32, 48, 64, 80, 96, 112, 128, 144]:
+    #     shots = fetch_sweep_shots(f"Traitors_Sweep_1_M_{m}", db_path="noisy_simulation_results.db") # "Traitors_Sweep_1_M_144"
+    for shot in shots:
+        print(shot)
 
-    plot_experiment(shots)
+    #     plot_experiment(shots)
+    # plt.show()

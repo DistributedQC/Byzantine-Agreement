@@ -1,7 +1,9 @@
 import aqnsim
 from dataclasses import dataclass, field
 from protocol.players import Player
-from protocol.config import SimulationConfig
+from protocol.config import SimulationConfig, NoiseType
+from aqnsim.quantum_simulator import qubit_noise
+
 # from protocol.config import (
 #     COMMANDER_NAME, COMMANDER_IS_TRAITOR, LOYAL_COMMANDER_ORDER, COMMANDER_QMEMORY_ADDR,
 #     LIEUTENANT_NAMES, TRAITOR_INDICES,
@@ -176,8 +178,10 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
 
     @aqnsim.process
     def quantum_port_source_handler(self, msg: aqnsim.Qubit):
-        
         if isinstance(msg, aqnsim.Qubit):
+            if (self.node.sim_config.NOISE_TYPE == NoiseType.Pauli and sum(self.node.sim_config.NOISE_VALS) > 0):
+            # print(self.qmemory.positions[0].peek())
+                qubit_noise.apply_pauli_noise(self.sim_context.qs, self.node.sim_config.NOISE_VALS[0], self.node.sim_config.NOISE_VALS[1], self.node.sim_config.NOISE_VALS[2], self.node.sim_config.NOISE_VALS[3], msg)
             self.node.qmemory.positions[0].put(qubit=msg)
             yield self.node.measure_qubit() 
 

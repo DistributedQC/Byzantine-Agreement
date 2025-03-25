@@ -1,4 +1,5 @@
 import aqnsim
+from enum import Enum, auto
 
 # ---------------------------
 # User-defined Parameters
@@ -50,6 +51,12 @@ import aqnsim
 #     "TRAITOR_INDICES must be a subset of valid lieutenant indices!"
 # )
 
+class NoiseType(Enum):
+    Depolarizing = "depolarizing"
+    Pauli = "pauli"
+    Dephasing = "dephasing"
+        
+
 class SimulationConfig:
     def __init__(self,
                  COMMANDER_NAME="Alice",
@@ -63,7 +70,9 @@ class SimulationConfig:
                  QSOURCE_NOISE_MODEL=None,
                  QUANTUM_CHANNEL_DELAY=None,
                  QUANTUM_CHANNEL_NOISE=0.0,
-                 CLASSICAL_CHANNEL_DELAY=None):
+                 CLASSICAL_CHANNEL_DELAY=None,
+                 NOISE_TYPE=NoiseType.Pauli,
+                 NOISE_VALS=(0, 0, 0, 0)):
         
         # Default values for mutable arguments
         if LIEUTENANT_NAMES is None:
@@ -83,6 +92,8 @@ class SimulationConfig:
         self.COMMANDER_IS_TRAITOR = COMMANDER_IS_TRAITOR
         self.TRAITOR_INDICES = TRAITOR_INDICES
         self.LOYAL_COMMANDER_ORDER = LOYAL_COMMANDER_ORDER
+        self.NOISE_TYPE = NOISE_TYPE
+        self.NOISE_VALS = NOISE_VALS
         
         # Action names
         self.SEND_ORDER_ACTION = "SEND_ORDER"
