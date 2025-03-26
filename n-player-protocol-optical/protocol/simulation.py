@@ -8,6 +8,7 @@ from protocol.config import (
     DISTRIBUTOR_NAME,
     CHANNEL_LENGTH, ATTENUATION,
     CLASSICAL_CHANNEL_DELAY,
+    M, N
 )
 
 def print_game_stats(results):
@@ -48,7 +49,25 @@ def create_lieutenants(sim_context: aqnsim.SimulationContext):
         for idx, name in enumerate(LIEUTENANT_NAMES)
     ]
 
-    
+@aqnsim.process
+def loss_handling(sim_context: aqnsim.SimulationContext):
+    """Compensate for photon loss by inserting 0s into bit vectors at timestamps where updates were missing."""
+    max_timestamp = (N - 1) * M - 1
+    yield sim_context.env.timeout(max_timestamp+1)
+    for player, updates in sim_context.datacollector.get_data().items():
+        # Find all the timestamps that have updates
+        rounded_timestamps = {round(ts) for _, ts in updates}
+        
+        # Find the missing timestamps by comparing with all possible timestamps
+        all_timestamps = set(range(max_timestamp + 1))
+        missing_timestamps = all_timestamps - rounded_timestamps
+
+        # Only update the last bit vector for the player
+        last_bit_vector, last_ts = updates[-1]
+        for i in missing_timestamps:
+            last_bit_vector.insert(i,0)
+        
+@aqnsim.process
 def setup_network(sim_context: aqnsim.SimulationContext) -> aqnsim.Network:
     distributor = Distributor(sim_context = sim_context, name = DISTRIBUTOR_NAME)
     commander = create_commander(sim_context)
@@ -80,6 +99,7 @@ def setup_network(sim_context: aqnsim.SimulationContext) -> aqnsim.Network:
             network.add_link(clink, player1, player2, player2.name, player1.name)
 
     DistributorProtocol(sim_context = sim_context, node = distributor)
+    yield loss_handling(sim_context=sim_context)
     CommanderProtocol(sim_context = sim_context, node = commander)
     for lieutenant in lieutenants:
         LieutenantProtocol(sim_context = sim_context, node = lieutenant)

@@ -31,7 +31,7 @@ SEC = aqnsim.SECOND
 # QUANTUM_CHANNEL_NOISE = 0.0
 CLASSICAL_CHANNEL_DELAY = 1 * SEC
 CHANNEL_LENGTH = 10000 # TODO: Array of channel lengths
-ATTENUATION= 0
+ATTENUATION= .00002
 
 # ---------------------------
 # Derived Parameters & Validation

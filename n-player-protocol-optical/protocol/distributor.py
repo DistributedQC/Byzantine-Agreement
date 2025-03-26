@@ -78,11 +78,10 @@ class DistributorProtocol(aqnsim.NodeProtocol):
         current_round = 0
         while (current_round < M):
             base_forwarding_list=list(range(NUM_PLAYERS))
-            self.distributor.emit_qubits(n_port_forwarding_list=base_forwarding_list)
             for k in range(1, NUM_PLAYERS): 
-                yield self.wait(1)  
                 forwarding_list = base_forwarding_list[::k] + [x for x in base_forwarding_list if x not in base_forwarding_list[::k]]
                 self.distributor.emit_qubits(n_port_forwarding_list=forwarding_list)
+                yield self.wait(1)  
             current_round += 1
             self.sim_context.simlogger.info(f"Finished round {current_round}")
 
