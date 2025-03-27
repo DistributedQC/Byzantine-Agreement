@@ -60,7 +60,7 @@ def loss_handling(sim_context: aqnsim.SimulationContext):
         
         # Find the missing timestamps by comparing with all possible timestamps
         all_timestamps = set(range(max_timestamp + 1))
-        missing_timestamps = all_timestamps - rounded_timestamps
+        missing_timestamps = [ts for ts in all_timestamps if ts not in rounded_timestamps]
 
         # Only update the last bit vector for the player
         last_bit_vector, last_ts = updates[-1]
