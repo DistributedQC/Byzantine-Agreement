@@ -88,5 +88,5 @@ class CommanderProtocol(aqnsim.NodeProtocol):
             )
             self.node.ports[lieutenant_name].rx_output(cv_message)
 
-            self.node.data_collector.update_attribute(self.name, {"is_traitor":self.node.memory.is_traitor, "orders":self.node.memory.orders})
+            self.node.data_collector.update_attribute(self.name, {"BV":self.node.memory.bit_vector, "is_traitor":self.node.memory.is_traitor, "orders":self.node.memory.orders})
             # All done!

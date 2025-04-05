@@ -371,7 +371,8 @@ class LieutenantProtocol(aqnsim.NodeProtocol):
                     if self.node.memory.is_traitor:
                         self.node.memory.final_decision = aqnsim.random_utilities.choice([True, False, None])
 
-                    self.node.data_collector.update_attribute(self.name, {"is_traitor":self.node.memory.is_traitor,
+                    self.node.data_collector.update_attribute(self.name, {"BV":self.node.memory.bit_vector,
+                                                                          "is_traitor":self.node.memory.is_traitor,
                                                                           "received_order": self.node.memory.received_order,
                                                                           "initial_decision": self.node.memory.initial_decision,
                                                                           "intermediate_decision": self.node.memory.intermediate_decision,
