@@ -1,0 +1,97 @@
+#!/bin/bash
+
+generate_lieutenants_array() {
+  length=$1
+  lieutenants="["
+  for ((i=1; i<=length; i++)); do
+    if [[ $i -lt $length ]]; then
+      lieutenants+="\"L$i\", "
+    else
+      lieutenants+="\"L$i\""
+    fi
+  done
+  lieutenants+="]"
+  echo "$lieutenants"
+}
+
+run_simulation() {
+  commander_name=$1
+  num_lieutenants=$2
+  M=$3
+  traitors=$4
+  commander_is_traitor=$5
+  loyal_commander_order=$6
+  runs_per_length=$7
+  lengths=$8
+
+  lieutenants=$(generate_lieutenants_array $num_lieutenants)
+
+  for length in $lengths; do
+    cat > config.py << EOL
+import aqnsim
+
+COMMANDER_NAME = "$commander_name"
+LIEUTENANT_NAMES = $lieutenants
+DISTRIBUTOR_NAME = "Distributor"
+
+M = $M
+
+COMMANDER_IS_TRAITOR = $commander_is_traitor
+TRAITOR_INDICES = $traitors
+LOYAL_COMMANDER_ORDER = $loyal_commander_order
+
+SEND_ORDER_ACTION = "SEND_ORDER"
+SEND_CV_ACTION = "SEND_CV"
+ROUND2_ACTION = "ROUND2_ACTION"
+ROUND3_ACTION = "ROUND3_ACTION"
+
+SEC = aqnsim.SECOND
+CLASSICAL_CHANNEL_DELAY = 1 * SEC
+
+CHANNEL_LENGTH = $length
+ATTENUATION= .00002
+
+N = 1 + len(LIEUTENANT_NAMES)
+COMMANDER_QMEMORY_ADDR = N - 1
+
+NUM_PLAYERS = N
+NUM_LIEUTENANTS = N - 1
+EOL
+
+    sleep 0.1
+
+    for ((i=1; i<=runs_per_length; i++)); do
+      python run_traitor_commander_simulation.py #NOTE: Due to 6 cores, runs the simulation 16x per python call
+    done
+  done
+}
+
+
+# Parameters:
+#   commander_name=$1
+#   num_lieutenants=$2
+#   M=$3
+#   traitors=$4
+#   commander_is_traitor=$5
+#   loyal_commander_order=$6
+#   runs_per_length=$7
+#   lengths=$8
+
+lengths="0.1 1 10 100 1000 10000 100000"
+
+run_simulation "Alice" 4 1 '[]' True True 30 "$lengths"
+run_simulation "Alice" 4 10 '[]' True True 30 "$lengths"
+run_simulation "Alice" 4 20 '[]' True True 30 "$lengths"
+
+run_simulation "Alice" 4 1 '[0]' True True 30 "$lengths"
+run_simulation "Alice" 4 10 '[0]' True True 30 "$lengths"
+run_simulation "Alice" 4 20 '[0]' True True 30 "$lengths"
+
+run_simulation "Alice" 4 1 '[0,1]' True True 30 "$lengths"
+run_simulation "Alice" 4 10 '[0,1]' True True 30 "$lengths"
+run_simulation "Alice" 4 20 '[0,1]' True True 30 "$lengths"
+
+run_simulation "Alice" 4 1 '[0,1,2]' True True 30 "$lengths"
+run_simulation "Alice" 4 10 '[0,1,2]' True True 30 "$lengths"
+run_simulation "Alice" 4 20 '[0,1,2]' True True 30 "$lengths"
+

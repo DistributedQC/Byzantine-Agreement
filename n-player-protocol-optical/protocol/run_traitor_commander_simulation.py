@@ -40,18 +40,14 @@ def run():
         N = 1
         Num_Traitors = 0
 
-        loyal_commander_order = latest_results['Alice'][0]['orders'][0] # loyal orders all same
-
         for key, value in latest_results.items(): # PRINT LIEUTENANT INFO
             if "orders" not in latest_results[key][0]: 
                 N += 1
                 if not latest_results[key][0]['is_traitor']:
                     if latest_results[key][0]['final_decision'] == None:
                         Abort_Count +=1
-                    elif latest_results[key][0]['final_decision'] != loyal_commander_order:
-                        Incorrect_Count +=1
                     else:
-                        Correct_Count +=1
+                        Incorrect_Count +=1
 
                 else:
                     Num_Traitors +=1
@@ -59,7 +55,7 @@ def run():
 
         M = int(len(latest_results["Alice"][0]['BV']) / (N-1))
 
-        with open("loyal_commander_simulation_results.csv", "a") as file:
+        with open("traitor_commander_simulation_results.csv", "a") as file:
             file.write(f"{M},{N},{Num_Traitors},{CHANNEL_LENGTH},{ATTENUATION},{Abort_Count},{Correct_Count},{Incorrect_Count}\n")
 
 if __name__ == "__main__":
