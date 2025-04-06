@@ -21,12 +21,10 @@ run_simulation() {
   traitors=$4
   commander_is_traitor=$5
   loyal_commander_order=$6
-  runs_per_multiplier=$7
-  multipliers=$8
+  runs=$7
 
   lieutenants=$(generate_lieutenants_array $num_lieutenants)
 
-  for MULTIPLIER in $multipliers; do
     cat > config.py << EOL
 import aqnsim
 
@@ -51,8 +49,8 @@ QUANTUM_CHANNEL_DELAY = 0 * SEC
 QUANTUM_CHANNEL_NOISE = 0.0
 CLASSICAL_CHANNEL_DELAY = 1 * SEC
 
-NOISE_TIME = 0.00005 * SEC
-T1_TIME = $MULTIPLIER * NOISE_TIME
+T1_TIME = 0.00005 * SEC
+NOISE_TIME = 0 * SEC
 
 N = 1 + len(LIEUTENANT_NAMES)
 COMMANDER_QMEMORY_ADDR = N - 1
@@ -63,17 +61,35 @@ EOL
 
     sleep 0.1
 
-    for ((i=1; i<=runs_per_multiplier; i++)); do
-      python run_simulation_noisy.py
+    for ((i=1; i<=runs; i++)); do
+      python run_noiseless_traitor_commander_simulation.py #NOTE: Due to 6 cores, runs the simulation 16x per python call
     done
-  done
 }
 
-# Example calls:
-# multipliers="1 2 8 128 32768"
-multipliers="1 2 8"
 
-# run_simulation "Alice" 2 5 '[0]' False True 50 "$multipliers"
-run_simulation "Alice" 4 5 '[0,1]' False True 50 "$multipliers"
-# run_simulation "Alice" 6 5 '[0,1,2]' False True 50 "$multipliers"
-# run_simulation "Alice" 12 5 '[0,1,2,3,4,5]' False True 50 "$multipliers"
+# Parameters:
+#   commander_name=$1
+#   num_lieutenants=$2
+#   M=$3
+#   traitors=$4
+#   commander_is_traitor=$5
+#   loyal_commander_order=$6
+#   runs_per_t1_interval=$7
+#   t1_intervals=$8
+
+
+run_simulation "Alice" 4 1 '[]' True True 30 
+run_simulation "Alice" 4 10 '[]' True True 30 
+run_simulation "Alice" 4 20 '[]' True True 30 
+
+run_simulation "Alice" 4 1 '[0]' True True 30 
+run_simulation "Alice" 4 10 '[0]' True True 30 
+run_simulation "Alice" 4 20 '[0]' True True 30 
+
+run_simulation "Alice" 4 1 '[0,1]' True True 30 
+run_simulation "Alice" 4 10 '[0,1]' True True 30 
+run_simulation "Alice" 4 20 '[0,1]' True True 30 
+
+run_simulation "Alice" 4 1 '[0,1,2]' True True 30 
+run_simulation "Alice" 4 10 '[0,1,2]' True True 30 
+run_simulation "Alice" 4 20 '[0,1,2]' True True 30 
