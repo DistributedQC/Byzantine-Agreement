@@ -80,7 +80,8 @@ EOL
 #   runs_per_t1_interval=$7
 #   t1_intervals=$8
 
-t1_intervals="0.000001 0.00001 0.0001 0.001 0.01 0.1 1"
+#t1_intervals="0.000001 0.00001 0.0001 0.001 0.01 0.1 1"
+t1_intervals="0.5"
 
 run_simulation "Alice" 4 1 '[]' True True 30 "$t1_intervals"
 run_simulation "Alice" 4 10 '[]' True True 30 "$t1_intervals"

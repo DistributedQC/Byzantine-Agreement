@@ -11,8 +11,10 @@ protocol/config.py
 protocol/distributor.py
 protocol/lieutenants.py
 protocol/players.py
+protocol/plot.py
 protocol/plot_noiseless.py
-protocol/plot_noisy.py
-protocol/run_simulation_noiseless.py
-protocol/run_simulation_noisy.py
+protocol/run_loyal_commander_simulation.py
+protocol/run_noiseless_loyal_commander_simulation.py
+protocol/run_noiseless_traitor_commander_simulation.py
+protocol/run_traitor_commander_simulation.py
 protocol/simulation.py
